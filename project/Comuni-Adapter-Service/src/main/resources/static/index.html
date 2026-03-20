@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoRicerca Italia</title>
+    <style>
+        /* CSS Integrato per evitare problemi di caricamento esterno */
+        body { 
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh; margin: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .card { 
+            background: white; border-radius: 15px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            width: 90%; max-width: 400px; overflow: hidden;
+        }
+        .card-header {
+            background: #4e73df; color: white; padding: 20px;
+            text-align: center; font-weight: bold; font-size: 1.2rem;
+        }
+        .card-body { padding: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
+        select { 
+            width: 100%; padding: 10px; border-radius: 8px; 
+            border: 1px solid #ddd; background: #fff; font-size: 1rem;
+        }
+        select:disabled { background: #f0f0f0; cursor: not-allowed; }
+        
+        .result-box {
+            background: #eef2ff; border-radius: 10px; padding: 15px;
+            margin-top: 20px; border-left: 5px solid #4e73df;
+            display: none; /* Inizialmente nascosto */
+            text-align: center;
+        }
+        .result-item { margin: 10px 0; }
+        .result-label { font-size: 0.8rem; color: #666; text-transform: uppercase; }
+        .result-value { font-size: 1.2rem; font-weight: bold; color: #4e73df; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="card-header">📍 GeoRicerca Italia</div>
+        <div class="card-body">
+            <div class="form-group">
+                <label>Regione</label>
+                <select id="regione" onchange="caricaProvince()">
+                    <option value="">Seleziona...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Provincia</label>
+                <select id="provincia" onchange="caricaComuni()" disabled>
+                    <option value="">Seleziona...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Comune</label>
+                <select id="comune" onchange="mostraRisultati()" disabled>
+                    <option value="">Seleziona...</option>
+                </select>
+            </div>
+
+            <!-- Box Risultati -->
+            <div id="risultato" class="result-box">
+                <div class="result-item">
+                    <span class="result-label">CAP</span>
+                    <span id="resCap" class="result-value">-</span>
+                </div>
+                <div style="height: 1px; background: #ddd; margin: 10px 0;"></div>
+                <div class="result-item">
+                    <span class="result-label">Sigla Provincia</span>
+                    <span id="resSigla" class="result-value">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const API_BASE = '/api/comuni';
+
+    // Funzione chiamata all'avvio
+    async function init() {
+        try {
+            const res = await fetch(`${API_BASE}/regioni`);
+            const regioni = await res.json();
+            const select = document.getElementById('regione');
+            regioni.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = opt.textContent = r;
+                select.appendChild(opt);
+            });
+        } catch (e) { console.error("Errore inizializzazione:", e); }
+    }
+
+    async function caricaProvince() {
+        const reg = document.getElementById('regione').value;
+        const selectProv = document.getElementById('provincia');
+        const selectCom = document.getElementById('comune');
+        const resBox = document.getElementById('risultato');
+
+        resBox.style.display = 'none'; // Nascondi risultati precedenti
+        selectCom.disabled = true;
+        
+        if (!reg) { selectProv.disabled = true; return; }
+
+        const res = await fetch(`${API_BASE}/province?regione=${encodeURIComponent(reg)}`);
+        const province = await res.json();
+        
+        selectProv.innerHTML = '<option value="">Seleziona...</option>';
+        province.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = opt.textContent = p;
+            selectProv.appendChild(opt);
+        });
+        selectProv.disabled = false;
+    }
+
+    async function caricaComuni() {
+        const prov = document.getElementById('provincia').value;
+        const selectCom = document.getElementById('comune');
+        if (!prov) return;
+
+        const res = await fetch(`${API_BASE}/comuni?provincia=${encodeURIComponent(prov)}`);
+        const comuni = await res.json();
+        
+        selectCom.innerHTML = '<option value="">Seleziona...</option>';
+        comuni.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = opt.textContent = c;
+            selectCom.appendChild(opt);
+        });
+        selectCom.disabled = false;
+    }
+
+    async function mostraRisultati() {
+        const nome = document.getElementById('comune').value;
+        const resBox = document.getElementById('risultato');
+        
+        if (!nome) { resBox.style.display = 'none'; return; }
+
+        try {
+            // Effettuiamo le chiamate e attendiamo le risposte
+            const rCap = await fetch(`${API_BASE}/cap?comune=${encodeURIComponent(nome)}`);
+            const caps = await rCap.json();
+
+            const rSigla = await fetch(`${API_BASE}/sigla?comune=${encodeURIComponent(nome)}`);
+            const sigla = await rSigla.text();
+
+            document.getElementById('resCap').innerText = Array.isArray(caps) ? caps.join(", ") : caps;
+            document.getElementById('resSigla').innerText = sigla;
+            resBox.style.display = 'block'; 
+        } catch (error) {
+            console.error("Errore fetch dati:", error);
+        }
+    }
+
+    // Avvia il caricamento delle regioni
+    init();
+</script>
+</body>
+</html>
