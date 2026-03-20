@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProjectDTO {
 	
+	private String nomeProgetto;
 	private String cliente;
-	private String progetto;
 	private String sotto_progetto;
 	private String compito;
 	private Double hours;

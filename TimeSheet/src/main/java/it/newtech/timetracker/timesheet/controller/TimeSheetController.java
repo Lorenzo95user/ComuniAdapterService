@@ -21,14 +21,21 @@ import it.newtech.timetracker.DTO.TSDTO;
 import it.newtech.timetracker.timesheet.entity.TimesheetEntry;
 import it.newtech.timetracker.timesheet.service.TimeSheetService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("api")
+@RequestMapping("api/ts")
 @AllArgsConstructor
+@Slf4j
 public class TimeSheetController {
 	
 	
 	private TimeSheetService timeSheetService;
+	
+	@GetMapping("all")
+	public List<TimesheetEntry> getAll(){
+		return timeSheetService.getAll();
+	}
 	
 //	dipendenti , task , progetto
 	@GetMapping("stats")
@@ -55,12 +62,15 @@ public class TimeSheetController {
 	}
 //	cliente (con progetto e task) , orario di lavoro giornaliero , tipo fatturazione (con costo applicato) e totale fatturato in quel giorno
 	@GetMapping("find/{name}")
-	public ResponseEntity<?> getBilling(@RequestParam @DateTimeFormat(iso = ISO.DATE_TIME) LocalDate startDate , @RequestParam @DateTimeFormat(iso = ISO.DATE_TIME) LocalDate endDate , @PathVariable String name ,@RequestParam(required = false) Long id){
+	public ResponseEntity<?> getBilling(@RequestParam (required = false) @DateTimeFormat(iso = ISO.DATE_TIME) LocalDate startDate , @RequestParam (required = false) @DateTimeFormat(iso = ISO.DATE_TIME) LocalDate endDate , @PathVariable (required = false) String name ,@RequestParam(required = false) Long id){
 		try {
 			LocalDateTime startDay = (startDate != null) ? startDate.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
 			LocalDateTime endDay = (endDate != null) ? endDate.atTime(LocalTime.MAX) : LocalDateTime.now().with(LocalTime.MAX);
-			return ResponseEntity.ok(timeSheetService.getBillingDTO(startDay , endDay , name , id));
+			var billingData = timeSheetService.getBillingDTO(startDay , endDay , name , id);
+			log.debug("Risultato : " + billingData);
+			return ResponseEntity.ok(billingData);
 		}catch(Exception e) {
+			log.error("errore nel caricamento dei dati : {}",e);
 			return ResponseEntity.internalServerError().body(e.getMessage());
 		}
 	}
@@ -70,17 +80,27 @@ public class TimeSheetController {
 		try {
 			LocalDateTime startDay = (startDate != null) ? startDate.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
 			LocalDateTime endDay = (endDate != null) ? endDate.atTime(LocalTime.MAX) : LocalDateTime.now().with(LocalTime.MAX);
-			return ResponseEntity.ok(timeSheetService.getProjClient(startDay, endDay, client, id));
+			var projClient = timeSheetService.getProjClient(startDay, endDay, client, id);
+			log.debug("Risultato :\n{}",projClient);
+			return ResponseEntity.ok(projClient);
 		} catch (Exception e) {
+			log.error("Errore nel caricamento dati : {}",e);
 			return ResponseEntity.internalServerError().body(e.getMessage());
 		}
 	}
 //	ore lavorate su un progetto
 	@GetMapping("project/time/{project}")
 	public ResponseEntity<?> getHoursOnProject(@PathVariable String project , @RequestParam(required=false) @DateTimeFormat(iso=ISO.DATE_TIME) LocalDate startDate ,@RequestParam(required=false) @DateTimeFormat(iso=ISO.DATE_TIME) LocalDate endDate){
-		LocalDateTime startDay = (startDate != null) ? startDate.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
-		LocalDateTime endDay = (endDate != null) ? endDate.atTime(LocalTime.MAX) : LocalDateTime.now().with(LocalTime.MAX);
-		return ResponseEntity.ok(timeSheetService.getHoursOnProject(project ,startDay , endDay));
+		try {
+			LocalDateTime startDay = (startDate != null) ? startDate.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
+			LocalDateTime endDay = (endDate != null) ? endDate.atTime(LocalTime.MAX) : LocalDateTime.now().with(LocalTime.MAX);
+			var hoursProject = timeSheetService.getHoursOnProject(project ,startDay , endDay);
+			log.debug("Risultato sulle ore del progetto {} : {}",project ,hoursProject);
+			return ResponseEntity.ok("Le ore dedicate al progetto "+project+" sono : " + hoursProject);
+		}catch ( Exception e) {
+			log.error("Errore nel caricamento dati : {}",e);
+			return ResponseEntity.internalServerError().body(e.getMessage());
+		}
 	}
 //	ore lavorate dai dipendenti sui progetti
 	@GetMapping("/project/users/hours")
@@ -88,8 +108,11 @@ public class TimeSheetController {
 		try {
 			LocalDateTime startDay = (startDate != null) ? startDate.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
 			LocalDateTime endDay = (endDate != null) ? endDate.atTime(LocalTime.MAX) : LocalDateTime.now().with(LocalTime.MAX);
-			return ResponseEntity.ok(timeSheetService.getDistinctProjects(startDay, endDay));
+			var distinctProject = timeSheetService.getDistinctProjects(startDay, endDay);
+			log.debug("Ore lavorate dai dipendenti : {}",distinctProject);
+			return ResponseEntity.ok(distinctProject);
 		}catch(Exception e) {
+			log.error("Errore nel caricamento dati : {}",e);
 			return ResponseEntity.internalServerError().body(e.getMessage());
 		}
 		
@@ -100,8 +123,11 @@ public class TimeSheetController {
 		try {
 			LocalDateTime startDay = (startDate != null) ? startDate.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
 			LocalDateTime endDay = (endDate != null) ? endDate.atTime(LocalTime.MAX) : LocalDateTime.now().with(LocalTime.MAX);
-			return ResponseEntity.ok(timeSheetService.getProjectHours(startDay, endDay));
+			var projectHours= timeSheetService.getProjectHours(startDay, endDay);
+			log.debug("Risultato :\n{}",projectHours);
+			return ResponseEntity.ok(projectHours);
 		}catch( Exception e) {
+			log.error("Errore nel caricamento dati : {}",e);
 			return ResponseEntity.internalServerError().body(e.getMessage());
 		}
 	}

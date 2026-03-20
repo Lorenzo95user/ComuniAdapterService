@@ -3,8 +3,11 @@ package it.newtech.timetracker.project.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,6 +37,12 @@ public class ProjectController {
 	@GetMapping("/sub")
 	public List<Object[]> getSubAndTask(){
 		return pServ.getSubAndTask();
+	}
+	
+	
+	@PostMapping("add/project")
+	public ResponseEntity<?> createProject (@RequestBody Project project){
+		return ResponseEntity.ok(project);
 	}
 
 }

@@ -32,6 +32,10 @@ public class TimeSheetService {
 	
 	private TimesheetEntryRepository timesheetEntryRepository;
 	
+	public List<TimesheetEntry> getAll(){
+		return timesheetEntryRepository.findAll();
+	}
+	
 	public List<Object[]> getStats(){
 		return timesheetEntryRepository.findStats();
 	}
@@ -96,12 +100,12 @@ public class TimeSheetService {
 				Map<String,ProjectDTO> projDtoList = timesheetEntriesList.stream().map(ts ->{
 					ProjectDTO dto = new ProjectDTO();
 					dto.setCliente(ts.getProject().getCustomerName());
-					dto.setProgetto(ts.getProject().getName());
+					dto.setNomeProgetto(ts.getProject().getName());
 					dto.setSotto_progetto(ts.getSubProject().getName());
 					dto.setCompito(ts.getTask().getName());
 					dto.setHours(sum);
 					return dto;
-				}).collect(Collectors.toMap(ProjectDTO::getProgetto,dto -> dto,(existing,replacement)->existing));
+				}).collect(Collectors.toMap(ProjectDTO::getNomeProgetto,dto -> dto,(existing,replacement)->existing));
 				return new ArrayList<>(projDtoList.values());
 			}catch (Exception e) {
 				log.error(e.getMessage());

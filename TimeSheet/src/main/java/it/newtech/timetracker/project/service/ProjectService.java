@@ -15,26 +15,26 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ProjectService {
 	
-	private ProjectRepository repo;
+	private ProjectRepository projectRepository;
 	
 	public Optional<Project> getProject(Long id){
-		return repo.findById(id);
+		return projectRepository.findById(id);
 	}
 	
 	public List<Project> getAll(){
-		return repo.findAllP();
+		return projectRepository.findAllP();
 	}
 	
 	
 	public List<ProjectDTO> getProjClient(String name){
-		List<Object[]> list = repo.findClientsProjects(name);
+		List<Object[]> list = projectRepository.findClientsProjects(name);
 		if(list.isEmpty()) {
 			return null;
 		}
 			List<ProjectDTO> dtolist = list.stream().map(c ->{
 				ProjectDTO dto = new ProjectDTO();
 				dto.setCliente((String) c[0]);
-				dto.setProgetto((String) c[1]);
+				dto.setNomeProgetto((String) c[1]);
 				dto.setSotto_progetto((String) c[2]);
 				dto.setCompito((String) c[3]);
 				return dto;
@@ -42,7 +42,14 @@ public class ProjectService {
 		return dtolist;
 	}
 	public List<Object[]> getSubAndTask(){
-		return repo.findSubAndTask();
+		return projectRepository.findSubAndTask();
+	}
+	public Project createProject(Project proj) {
+		Project project = new Project();
+		project.setName(proj.getName());
+		project.setCustomerName(proj.getCustomerName());
+		return projectRepository.save(project);
+		
 	}
 
 }

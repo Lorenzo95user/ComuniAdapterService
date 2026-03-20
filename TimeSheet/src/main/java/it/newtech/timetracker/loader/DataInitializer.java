@@ -1,4 +1,4 @@
-/*package it.newtech.timetracker.loader;
+package it.newtech.timetracker.loader;
 
 
 
@@ -23,7 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 
@@ -101,4 +101,4 @@ public class DataInitializer implements CommandLineRunner {
 
         System.out.println("--- Popolamento completato: inserite circa 40-50 righe di timesheet ---");
     }
-} */
+} 

@@ -1,0 +1,3 @@
+2026-03-19 10:50:48.112317+01:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "comune" not found; SQL statement:
+SELECT DISTINCT  c.denominazione_provincia  FROM Comune c [42102-240]
